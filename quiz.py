@@ -16,6 +16,15 @@ class Card:
     def is_true_option(self, option:str) -> bool:
         return self.answer_options[0] == option
 
-class Quiz:
-    cards: list[Card]
-    
+class Deck:
+    __cards: list[Card]
+    def __init__(self):
+        self.__cards = []
+
+    def get_card(self, index: int) -> Card:
+        return self.cards[index]
+
+class QuizApp:
+    __deck: Deck = Deck()
+    def get_card(self, index: int) -> Card:
+        return self.__deck.get_card(index)

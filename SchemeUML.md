@@ -5,7 +5,15 @@ class Card{
     is_true_option(option: str)
 }
 
+class Deck{
+    __cards: list[Card]
+    get_card(index: int) -> Card
+}
+
 class Quiz{
     
 }
+
+Deck o-- Card
+
 @enduml
