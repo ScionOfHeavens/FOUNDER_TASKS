@@ -12,7 +12,7 @@ class Deck{
 
 class User{
     id: int
-    quistion_id: int
+    question_id: int
 }
 
 class UserDB{
@@ -22,16 +22,22 @@ class UserDB{
 }
 
 class UI{
-    start_quiz() -> None
-    take_answere(self, options: dict) -> str
-    print_card(self, question_number, question, options) -> None
+    greet() -> None
+    ask_question(question: str) -> None
+    suggest_answers(options: list[str]) -> None
+    get_answer(options: list[str]) -> str
 }
 
-class Quiz{
-    
+class QuizApp{
+    start_main_loop() -> None
 }
 
 Deck o-- Card
 UserDB o-- User
 
+QuizApp ..> Deck
+QuizApp ..> UserDB
+QuizApp ..> UI
+QuizApp ..> Card
+QuizApp ..> User
 @enduml
