@@ -14,6 +14,16 @@ class Deck:
                 'false_options': ['float', 'str', 'natural'],
                 'true_option': 'int'
             },
+            {
+                'question': 'Что такое лямбда-функция?',
+                'false_options': ['функция с именем лямбда', 'функция класса', 'переменная с функцей'],
+                'true_option': 'функция без имени'
+            },
+            {
+                'question': 'Чего больше всего желает автор Квиза?',
+                'false_options': ['Делать ботов', 'Программировать', 'Делать игры'],
+                'true_option': 'Научиться архитектуре'
+            },
         ]
         self.__cards = {i: Card(i,e) for i,e in zip(range(1, len(db)+1), db)}
 
