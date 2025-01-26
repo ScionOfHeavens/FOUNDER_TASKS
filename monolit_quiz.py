@@ -36,9 +36,9 @@ class UI:
 class QuizApp:
     def start_main_loop() -> None:
         user_id = randint(1,1000)
+        user = udb.get_user(user_id)
         while True:
             UI.greet()
-            user = udb.get_user(user_id)
             card = deck.get_card(user.question_id)
             
             UI.ask_question(card.question)

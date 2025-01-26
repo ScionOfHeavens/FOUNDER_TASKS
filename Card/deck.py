@@ -17,7 +17,7 @@ class Deck:
         ]
         self.__cards = {i: Card(i,e) for i,e in zip(range(1, len(db)+1), db)}
 
-    def get_card(self, index: int) -> Card:
+    async def get_card(self, index: int) -> Card:
         return self.__cards[index]
-    def is_finish_card(self, card: Card) -> bool:
+    async def is_finish_card(self, card: Card) -> bool:
         return card.id == len(self.__cards)
