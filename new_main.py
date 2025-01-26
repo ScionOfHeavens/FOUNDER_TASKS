@@ -1,4 +1,3 @@
-import aiosqlite
 import asyncio
 import logging
 from aiogram import Bot, Dispatcher, types
@@ -39,6 +38,7 @@ async def check_answer(callback_query: types.CallbackQuery):
         await play_card(callback_query.message, user_id)
     else:
         await callback_query.message.answer("Это был последний вопрос. Квиз завершен!")
+        await QuizApp.restart_quiz(user_id)
 
 async def play_card(message: types.Message, user_id: int):
     question = await QuizApp.get_question(user_id)
@@ -60,6 +60,7 @@ async def start_cmd_handler(message: types.Message):
     await message.answer("Добро пожаловать в квиз!", reply_markup=builder.as_markup(resize_keyboard=True))
 
 async def main():
+    await QuizApp.awake()
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
