@@ -1,20 +1,20 @@
 from random import shuffle
 
 class Card:
-    __index: int
+    __id: int
     __question: str
     __false_options: list[str]
     __true_option: str
 
-    def __init__(self, index: int,  d: dict):
-        self.__false_options = d["false_options"]
-        self.__true_option = d["true_option"]
-        self.__question = d["question"]
-        self.__index = index
+    def __init__(self, id: int = 0, false_options: list[str] = [], true_option: str = "", question: str = ""):
+        self.__false_options = false_options
+        self.__true_option = true_option
+        self.__question = question
+        self.__id = id
 
     @property
     def id(self):
-        return self.__index
+        return self.__id
     @property
     def question(self)->str:
         return self.__question
@@ -32,3 +32,6 @@ class Card:
 
     def is_true_option(self, option:str) -> bool:
         return self.__true_option == option
+    
+    def serialize(self) -> dict:
+        return {v.removeprefix('_' + self.__class__.__name__ + '__'):self.__getattribute__(v) for v in self.__dict__}

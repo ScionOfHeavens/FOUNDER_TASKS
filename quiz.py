@@ -1,4 +1,5 @@
-from User.userDB import UserDB, UserDictDB, UserSQLiteDB
+from User.userDB import UserDB, UserSQLiteDB
+from User.user import User
 from Card.card import Card
 from Card.deck import Deck
 
@@ -10,15 +11,21 @@ class QuizApp:
 
     async def prepare_next_question(user_id: int):
         user = await QuizApp.__user_db.get_user(user_id)
+        if user == None:
+            user = User(user_id)
+            await QuizApp.__user_db.add_user(User)
         next_question_id: int
         if await QuizApp.is_final_question(user_id):
             next_question_id = 1
         else:
             next_question_id = user.question_id + 1
-        await QuizApp.__user_db.update_quiz_index(user_id, next_question_id)
+        await QuizApp.__user_db.update_user(User(user_id, next_question_id))
 
     async def get_question(user_id: int):
         user = await QuizApp.__user_db.get_user(user_id)
+        if user == None:
+            user = User(user_id)
+            await QuizApp.__user_db.add_user(user)
         card = await QuizApp.__deck.get_card(user.question_id)
         return card.question
     
@@ -42,5 +49,5 @@ class QuizApp:
         card = await QuizApp.__deck.get_card(user.question_id)
         return await QuizApp.__deck.is_finish_card(card)
     
-    async def restart_quiz(user_id: int):
-        user = await QuizApp.__user_db.update_quiz_index(user_id, 1)
+    async def start_quiz(user_id: int):
+        user = await QuizApp.__user_db.update_user(User(user_id, 1))

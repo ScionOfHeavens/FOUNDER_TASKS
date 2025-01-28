@@ -38,7 +38,7 @@ async def check_answer(callback_query: types.CallbackQuery):
         await play_card(callback_query.message, user_id)
     else:
         await callback_query.message.answer("Это был последний вопрос. Квиз завершен!")
-        await QuizApp.restart_quiz(user_id)
+        await QuizApp.start_quiz(user_id)
 
 async def play_card(message: types.Message, user_id: int):
     question = await QuizApp.get_question(user_id)

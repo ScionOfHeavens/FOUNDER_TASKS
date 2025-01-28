@@ -8,7 +8,7 @@ class Deck:
         data: str
         with open(r"Card\deck.json", "r", encoding="utf-8") as file:
             data = json.load(file)
-        self.__cards = {i+1: Card(i+1,e) for i,e in enumerate(data)}
+        self.__cards = {i+1: Card(i+1,**e) for i,e in enumerate(data)}
 
     async def get_card(self, index: int) -> Card:
         return self.__cards[index]
