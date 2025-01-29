@@ -1,3 +1,11 @@
+from dataclasses import dataclass, asdict
+import json
+import ast
+import sys
+
+from aiogram import types
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
+
 from User.userDB import UserDB, UserSQLiteDB
 from User.user import User
 from Card.card import Card
@@ -9,45 +17,48 @@ class QuizApp:
     async def awake():
         await QuizApp.__user_db.awake()
 
-    async def prepare_next_question(user_id: int):
+    async def get_card_user_from(user_id: int) -> tuple[Card, User]:
         user = await QuizApp.__user_db.get_user(user_id)
-        if user == None:
-            user = User(user_id)
-            await QuizApp.__user_db.add_user(User)
-        next_question_id: int
-        if await QuizApp.is_final_question(user_id):
-            next_question_id = 1
-        else:
-            next_question_id = user.question_id + 1
-        await QuizApp.__user_db.update_user(User(user_id, next_question_id))
+        card = await QuizApp.__deck.get_card(user.question_id)
+        return card, user
 
-    async def get_question(user_id: int):
-        user = await QuizApp.__user_db.get_user(user_id)
-        if user == None:
-            user = User(user_id)
-            await QuizApp.__user_db.add_user(user)
-        card = await QuizApp.__deck.get_card(user.question_id)
-        return card.question
+    async def check_answer(answer: str, user_id: int) -> str:
+        answer = answer.removeprefix("Answer:")
+        card, user = await QuizApp.get_card_user_from(user_id)
+        card: Card
+        if card.is_true_option(answer):
+            return "Ответ верный!"
+        else:
+            return f"Ответ \"{answer}\" неверен! Верный: {card.true_option}"
     
-    async def get_options(user_id: int):
-        user = await QuizApp.__user_db.get_user(user_id)
-        card = await QuizApp.__deck.get_card(user.question_id)
-        return card.options
+    async def prepare_next_question(user_id:int = 0) -> tuple[str, str]:
+        if user_id == 0:
+            return "Получить первый вопрос", "QuestionQuery"
+        card, user = await QuizApp.get_card_user_from(user_id)
+        next_card = await QuizApp.__deck.get_next(card)
+        user = User(user.id, next_card.id)
+        await QuizApp.__user_db.update_user(user)
+        if await QuizApp.__deck.is_finish_card(card):
+            return "Завершить Квиз", "FinishQuiz"
+        return "Получить следующий вопрос", "QuestionQuery"
+
+    async def play_card(user_id: int) -> tuple[str ,types.InlineKeyboardMarkup]:
+        card, user = await QuizApp.get_card_user_from(user_id)
+        question = card.question
+        keyboard = QuizApp.__generate_options_keyboard(user, card)
+        return question, keyboard
+
+    async def start_quiz(user_id: int) -> None:
+        await QuizApp.__user_db.add_user(User(user_id))
     
-    async def is_true_answer(user_id: int, answer: str):
-        user = await QuizApp.__user_db.get_user(user_id)
-        card = await QuizApp.__deck.get_card(user.question_id)
-        return card.is_true_option(answer)
-    
-    async def get_true_option(user_id: int):
-        user = await QuizApp.__user_db.get_user(user_id)
-        card = await QuizApp.__deck.get_card(user.question_id)
-        return card.true_option
-    
-    async def is_final_question(user_id: int):
-        user = await QuizApp.__user_db.get_user(user_id)
-        card = await QuizApp.__deck.get_card(user.question_id)
-        return await QuizApp.__deck.is_finish_card(card)
-    
-    async def start_quiz(user_id: int):
-        user = await QuizApp.__user_db.update_user(User(user_id, 1))
+    def __generate_options_keyboard(user:User,card: Card):
+        builder = InlineKeyboardBuilder()
+        for option in card.options:
+            builder.add(
+                types.InlineKeyboardButton(
+                text=option,
+                callback_data=f"Answer:{option}"
+                )
+            )
+        builder.adjust(1)
+        return builder.as_markup()

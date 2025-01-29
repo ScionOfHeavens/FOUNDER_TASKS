@@ -13,51 +13,60 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher()
 
-def generate_options_keyboard(options):
-    builder = InlineKeyboardBuilder()
-    for option in options:
-        builder.add(types.InlineKeyboardButton(
-            text=option,
-            callback_data=f"user answer is {option}")
+def delete_previous_message_buttons(func):
+    async def wrapper(callback_query: types.CallbackQuery):
+        await bot.edit_message_reply_markup(
+            chat_id=callback_query.message.chat.id,
+            message_id=callback_query.message.message_id,
+            reply_markup=None,  # Удаляем клавиатуру
         )
-    builder.adjust(1)
-    return builder.as_markup()
-
-@dp.callback_query(F.data.contains("user answer"))
-async def check_answer(callback_query: types.CallbackQuery):
-    answer = callback_query.data.removeprefix("user answer is ")
-    user_id = callback_query.from_user.id
-    if await QuizApp.is_true_answer(user_id, answer):
-        await callback_query.message.answer("Верно!")
-    else:
-        await callback_query.message.answer("Неверно!")
-        true_answer = await QuizApp.get_true_option(user_id)
-        await callback_query.message.answer(f"Неправильно. Правильный ответ: {true_answer}")
-    if not await QuizApp.is_final_question(user_id):
-        await QuizApp.prepare_next_question(user_id)
-        await play_card(callback_query.message, user_id)
-    else:
-        await callback_query.message.answer("Это был последний вопрос. Квиз завершен!")
-        await QuizApp.start_quiz(user_id)
-
-async def play_card(message: types.Message, user_id: int):
-    question = await QuizApp.get_question(user_id)
-    options = await QuizApp.get_options(user_id)
-    keyboard = generate_options_keyboard(options)
-    await message.answer(question, reply_markup=keyboard)
-
-@dp.message(F.text=="Начать игру")
-@dp.message(Command("quiz"))
-async def start_quiz(message: types.Message):
-    await message.answer(f"Давайте начнем квиз!\nВопрос:")
-    await play_card(message, message.from_user.id)
-
+        await func(callback_query)
+    return wrapper
 
 @dp.message(Command("start"))
-async def start_cmd_handler(message: types.Message):
+async def start_handler(message: types.Message):
     builder = ReplyKeyboardBuilder()
-    builder.add(types.KeyboardButton(text="Начать игру")) 
+    builder.add(types.KeyboardButton(text="Начать квиз"))
     await message.answer("Добро пожаловать в квиз!", reply_markup=builder.as_markup(resize_keyboard=True))
+
+async def get_next_question_query(user_id: int = 0) -> tuple[str, types.InlineKeyboardMarkup]:
+    query_text, callback_data = await QuizApp.prepare_next_question(user_id)
+    callback_data: str
+    builder = InlineKeyboardBuilder()
+    builder.add(
+        types.InlineKeyboardButton(
+        text=query_text,
+        callback_data=callback_data
+    ))
+    return builder.as_markup()
+
+@dp.message(F.text=="Начать квиз" )
+@dp.message(Command("quiz"))
+async def start_quiz(message: types.Message):
+    reply_markup = await get_next_question_query()
+    await QuizApp.start_quiz(message.from_user.id)
+    await message.answer(f"Давайте начнем квиз!", reply_markup=reply_markup)
+
+@dp.callback_query(F.data.contains("QuestionQuery"))
+@delete_previous_message_buttons
+async def send_question_and_options(callback_query: types.CallbackQuery):
+    user_id = callback_query.from_user.id
+    question, reply_markup = await QuizApp.play_card(user_id)
+    await callback_query.message.answer(question, reply_markup=reply_markup)
+
+@dp.callback_query(F.data.contains("Answer"))
+@delete_previous_message_buttons
+async def handle_answer(callback_query: types.CallbackQuery):
+    data = callback_query.data
+    user_id = callback_query.from_user.id
+    reply_msg = await QuizApp.check_answer(data, user_id)
+    reply_markup = await get_next_question_query(user_id)
+    await callback_query.message.answer(reply_msg, reply_markup=reply_markup)
+
+@dp.callback_query(F.data.contains("FinishQuiz"))
+@delete_previous_message_buttons
+async def handle_answer(callback_query: types.CallbackQuery):
+    await callback_query.message.answer("Спасибо за прохождение Квиза!")
 
 async def main():
     await QuizApp.awake()

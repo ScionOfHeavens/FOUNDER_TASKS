@@ -1,5 +1,7 @@
+from dataclasses import dataclass
 from random import shuffle
 
+@dataclass
 class Card:
     __id: int
     __question: str
