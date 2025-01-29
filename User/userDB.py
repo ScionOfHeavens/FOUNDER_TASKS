@@ -56,7 +56,11 @@ class UserSQLiteDB(UserDB):
         await self.__users.create_record(user)
     
     async def get_user(self, user_id: int) -> User:
-        return await self.__users.read_record(user_id)
+        user = await self.__users.read_record(user_id)
+        if user == None:
+            user = User(user_id)
+            self.add_user(user)
+        return user
     
     async def update_user(self, user: User) -> None:
         await self.__users.update_record(user)

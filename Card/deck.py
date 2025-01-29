@@ -20,7 +20,7 @@ class Deck:
             return await self.get_first_card()
 
     async def get_card(self, index: int) -> Card:
-        return self.__cards[index]
+        return self.__cards.get(index)
     
     async def is_finish_card(self, card: Card) -> bool:
         return card.id == len(self.__cards)

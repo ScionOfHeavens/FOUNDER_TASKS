@@ -27,10 +27,11 @@ def delete_previous_message_buttons(func):
 async def start_handler(message: types.Message):
     builder = ReplyKeyboardBuilder()
     builder.add(types.KeyboardButton(text="Начать квиз"))
+    builder.add(types.KeyboardButton(text="Продолжить квиз"))
     await message.answer("Добро пожаловать в квиз!", reply_markup=builder.as_markup(resize_keyboard=True))
 
-async def get_next_question_query(user_id: int = 0) -> tuple[str, types.InlineKeyboardMarkup]:
-    query_text, callback_data = await QuizApp.prepare_next_question(user_id)
+async def get_next_question_query(user_id: int = 0, to_continue:bool=False) -> tuple[str, types.InlineKeyboardMarkup]:
+    query_text, callback_data = await QuizApp.prepare_next_question(user_id, to_continue)
     callback_data: str
     builder = InlineKeyboardBuilder()
     builder.add(
@@ -46,6 +47,12 @@ async def start_quiz(message: types.Message):
     reply_markup = await get_next_question_query()
     await QuizApp.start_quiz(message.from_user.id)
     await message.answer(f"Давайте начнем квиз!", reply_markup=reply_markup)
+
+@dp.message(F.text=="Продолжить квиз" )
+@dp.message(Command("quiz"))
+async def start_quiz(message: types.Message):
+    reply_markup = await get_next_question_query(message.from_user.id, True)
+    await message.answer(f"Давайте продолжим!", reply_markup=reply_markup)
 
 @dp.callback_query(F.data.contains("QuestionQuery"))
 @delete_previous_message_buttons
