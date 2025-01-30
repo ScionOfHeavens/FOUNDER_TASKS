@@ -28,6 +28,7 @@ async def start_handler(message: types.Message):
     builder = ReplyKeyboardBuilder()
     builder.add(types.KeyboardButton(text="Начать квиз"))
     builder.add(types.KeyboardButton(text="Продолжить квиз"))
+    builder.add(types.KeyboardButton(text="Статистика"))
     await message.answer("Добро пожаловать в квиз!", reply_markup=builder.as_markup(resize_keyboard=True))
 
 async def get_next_question_query(user_id: int = 0, to_continue:bool=False) -> tuple[str, types.InlineKeyboardMarkup]:
@@ -54,6 +55,12 @@ async def start_quiz(message: types.Message):
     reply_markup = await get_next_question_query(message.from_user.id, True)
     await message.answer(f"Давайте продолжим!", reply_markup=reply_markup)
 
+@dp.message(F.text=="Статистика" )
+@dp.message(Command("quiz"))
+async def start_quiz(message: types.Message):
+    msg = await QuizApp.get_statistics()
+    await message.answer(msg)
+
 @dp.callback_query(F.data.contains("QuestionQuery"))
 @delete_previous_message_buttons
 async def send_question_and_options(callback_query: types.CallbackQuery):
@@ -73,7 +80,10 @@ async def handle_answer(callback_query: types.CallbackQuery):
 @dp.callback_query(F.data.contains("FinishQuiz"))
 @delete_previous_message_buttons
 async def handle_answer(callback_query: types.CallbackQuery):
-    await callback_query.message.answer("Спасибо за прохождение Квиза!")
+    user_id: int = callback_query.from_user.id
+    msg = await QuizApp.finish_quiz(user_id)
+    await callback_query.message.answer(msg)
+   
 
 async def main():
     await QuizApp.awake()

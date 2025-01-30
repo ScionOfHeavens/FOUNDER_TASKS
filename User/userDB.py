@@ -10,6 +10,8 @@ class UserDB:
         pass
     async def update_user(self, user: User) -> None:
         pass
+    async def get_all_users(self) -> list[User]:
+        pass
 
 # class UserSQLiteDB(UserDB):
 #     __DB_NAME = r"User/users.db"
@@ -65,5 +67,5 @@ class UserSQLiteDB(UserDB):
     async def update_user(self, user: User) -> None:
         await self.__users.update_record(user)
     
-    async def get_all_user(self) -> list[User]:
+    async def get_all_users(self) -> list[User]:
         return await self.__users.read_all_records()

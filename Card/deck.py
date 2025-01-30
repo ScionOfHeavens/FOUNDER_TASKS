@@ -24,3 +24,6 @@ class Deck:
     
     async def is_finish_card(self, card: Card) -> bool:
         return card.id == len(self.__cards)
+    
+    async def questions_amount(self) -> int:
+        return len(self.__cards)

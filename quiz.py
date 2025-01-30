@@ -25,9 +25,12 @@ class QuizApp:
     async def check_answer(answer: str, user_id: int) -> str:
         answer = answer.removeprefix("Answer:")
         card, user = await QuizApp.get_card_user_from(user_id)
+        user: User
         card: Card
         reply_msg = ""
         if card.is_true_option(answer):
+            user = User.increment_current_result(user)
+            await QuizApp.__user_db.update_user(user)
             reply_msg += "Ответ верный!\n"
         else:
             reply_msg += f"Ответ неверен!\n"
@@ -47,7 +50,7 @@ class QuizApp:
             next_card = card
         else:
             next_card = await QuizApp.__deck.get_next(card)
-        user = User(user.id, next_card.id)
+        user = User.update_question(user, next_card.id)
         await QuizApp.__user_db.update_user(user)
         if await QuizApp.__deck.is_finish_card(card):
             return "Завершить Квиз", "FinishQuiz"
@@ -60,7 +63,32 @@ class QuizApp:
         return question, keyboard
 
     async def start_quiz(user_id: int) -> None:
-        await QuizApp.__user_db.add_user(User(user_id))
+        user = await QuizApp.__user_db.get_user(user_id)
+        user = User.update_question(user, 1)
+        await QuizApp.__user_db.update_user(user)
+
+    async def finish_quiz(user_id: int) -> str:
+        user = await QuizApp.__user_db.get_user(user_id)
+        current = user.current_result
+        user = User.increment_current_tries(user)
+        user = User.update_best(user)
+        await QuizApp.__user_db.update_user(user)
+        msg = "Спасибо за прохождение Квиза!\n"
+        questions_amount = await QuizApp.__deck.questions_amount()
+        user_info  = user.info
+        msg += f"Ваш результат {current}/{questions_amount}\n"
+        msg += f"Ваш лучший результат {user_info[0]}/{questions_amount}\n"
+        msg += f"Вы прошли квиз {user_info[1]} раз(а)"
+        return msg
+    
+    async def get_statistics() -> str:
+        users = await QuizApp.__user_db.get_all_users()
+        msg = "Общая статистика:\n"
+        msg += "id                     current  best  tries\n"
+        for user in users:
+            best, tries, current = user.info
+            msg += f"{user.id}        {current}         {best}         {tries}\n"
+        return msg
     
     def __generate_options_keyboard(user:User,card: Card):
         builder = InlineKeyboardBuilder()

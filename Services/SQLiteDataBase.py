@@ -46,7 +46,7 @@ class SQLiteTable:
         if results is not None:
             objs = []
             for result in results:
-                objs.append(self.__cls(*results))
+                objs.append(self.__cls(*result))
             return objs
         else:
             return None
