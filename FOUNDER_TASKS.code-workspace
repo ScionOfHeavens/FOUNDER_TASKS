@@ -1,10 +1,27 @@
 {
 	"folders": [
-		{
-			"path": "."
-		}
-	],
-	"settings": {
-		"python.envFile": "${workspaceFolder}/.quizBotVenv"
+        { "path": "./quiz" },
+        { "path": "./future" }
+    ],
+    "settings": {
+        "terminal.integrated.env.windows": {
+            "VIRTUAL_ENV": "${workspaceFolder}/venv",
+            "PATH": "${workspaceFolder}/venv/Scripts:${env:PATH}"
+        },
+		"python.defaultInterpreterPath": "${workspaceFolder}/venv/Scripts/python.exe",
+		"terminal.integrated.profiles.windows": {
+			"PowerShell": {
+				"path": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+				"args": [
+					"-NoExit",
+					"-Command",
+					"& {if (Test-Path -Path '${workspaceFolder}/venv/Scripts/Activate.ps1') { & '${workspaceFolder}/venv/Scripts/Activate.ps1' }}"
+				]
+			}
+		},
+		"terminal.integrated.defaultProfile.windows": "PowerShell",
+		"python.terminal.activateEnvInCurrentTerminal": true,
+		
 	}
+	
 }
