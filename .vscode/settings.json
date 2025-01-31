@@ -1,0 +1,6 @@
+{
+    "files.exclude": {
+        "future": true,
+        "quiz": true
+    }
+}

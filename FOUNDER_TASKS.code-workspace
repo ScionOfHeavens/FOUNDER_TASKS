@@ -1,7 +1,8 @@
 {
 	"folders": [
-        { "path": "./quiz" },
-        { "path": "./future" }
+		{ "path": "."},
+        { "path": "quiz" },
+        { "path": "future" }
     ],
     "settings": {
         "terminal.integrated.env.windows": {
