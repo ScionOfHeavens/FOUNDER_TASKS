@@ -1,5 +1,4 @@
 import aiosqlite
-import sqlite3
 
 class SQLiteTable:
     __table_name: str
@@ -9,7 +8,7 @@ class SQLiteTable:
         self.__table_name = table_name
         self.__data_base_name = data_base_name
         self.__cls = cls
-
+    
     def serialize_obj_attributes(self, obj: object):
         attributes = {}
         for attr_name_with_prefix in obj.__dict__:
