@@ -1,21 +1,21 @@
 import asyncio
 import logging
-from aiogram import Bot, Dispatcher, types
+from aiogram import Bot, Dispatcher, Router, types
 from aiogram.filters.command import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from aiogram import F
 
-from api_token import API_TOKEN
+
 from quiz import QuizApp
+from api_token import API_TOKEN
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=API_TOKEN)
-dp = Dispatcher()
+router = Router()
 
 def delete_previous_message_buttons(func):
     async def wrapper(callback_query: types.CallbackQuery):
-        await bot.edit_message_reply_markup(
+        await callback_query.bot.edit_message_reply_markup(
             chat_id=callback_query.message.chat.id,
             message_id=callback_query.message.message_id,
             reply_markup=None,  # Удаляем клавиатуру
@@ -23,7 +23,7 @@ def delete_previous_message_buttons(func):
         await func(callback_query)
     return wrapper
 
-@dp.message(Command("start"))
+@router.message(Command("start"))
 async def start_handler(message: types.Message):
     builder = ReplyKeyboardBuilder()
     builder.add(types.KeyboardButton(text="Начать квиз"))
@@ -42,33 +42,33 @@ async def get_next_question_query(user_id: int = 0, to_continue:bool=False) -> t
     ))
     return builder.as_markup()
 
-@dp.message(F.text=="Начать квиз" )
-@dp.message(Command("quiz"))
+@router.message(F.text=="Начать квиз" )
+@router.message(Command("quiz"))
 async def start_quiz(message: types.Message):
     reply_markup = await get_next_question_query()
     await QuizApp.start_quiz(message.from_user.id)
     await message.answer(f"Давайте начнем квиз!", reply_markup=reply_markup)
 
-@dp.message(F.text=="Продолжить квиз" )
-@dp.message(Command("quiz"))
+@router.message(F.text=="Продолжить квиз" )
+@router.message(Command("quiz"))
 async def start_quiz(message: types.Message):
     reply_markup = await get_next_question_query(message.from_user.id, True)
     await message.answer(f"Давайте продолжим!", reply_markup=reply_markup)
 
-@dp.message(F.text=="Статистика" )
-@dp.message(Command("quiz"))
+@router.message(F.text=="Статистика" )
+@router.message(Command("quiz"))
 async def start_quiz(message: types.Message):
     msg = await QuizApp.get_statistics()
     await message.answer(msg)
 
-@dp.callback_query(F.data.contains("QuestionQuery"))
+@router.callback_query(F.data.contains("QuestionQuery"))
 @delete_previous_message_buttons
 async def send_question_and_options(callback_query: types.CallbackQuery):
     user_id = callback_query.from_user.id
     question, reply_markup = await QuizApp.play_card(user_id)
     await callback_query.message.answer(question, reply_markup=reply_markup)
 
-@dp.callback_query(F.data.contains("Answer"))
+@router.callback_query(F.data.contains("Answer"))
 @delete_previous_message_buttons
 async def handle_answer(callback_query: types.CallbackQuery):
     data = callback_query.data
@@ -77,7 +77,7 @@ async def handle_answer(callback_query: types.CallbackQuery):
     reply_markup = await get_next_question_query(user_id)
     await callback_query.message.answer(reply_msg, reply_markup=reply_markup)
 
-@dp.callback_query(F.data.contains("FinishQuiz"))
+@router.callback_query(F.data.contains("FinishQuiz"))
 @delete_previous_message_buttons
 async def handle_answer(callback_query: types.CallbackQuery):
     user_id: int = callback_query.from_user.id
@@ -85,9 +85,11 @@ async def handle_answer(callback_query: types.CallbackQuery):
     await callback_query.message.answer(msg)
    
 
-async def main():
+async def main(bot):
     await QuizApp.awake()
-    await dp.start_polling(bot)
+    await router.start_polling(bot)
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    bot = Bot(token=API_TOKEN)
+    dp = Dispatcher()
+    asyncio.run(main(bot))
