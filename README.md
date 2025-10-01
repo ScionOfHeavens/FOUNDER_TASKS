@@ -11,7 +11,7 @@
 ---
 ---
 
- - lesson10, Practice2 и Practice3 практические 1, 2 и 3 соответственно. Practic 2 не починил, потому ссылка: https://colab.research.google.com/drive/1vhBqE1yrwqj7oHFgN1t226bNZtXJLegk
+ - # lesson10, Practice2 и Practice3 практические 1, 2 и 3 соответственно. Practic 2 не починил, потому ссылка: https://colab.research.google.com/drive/1vhBqE1yrwqj7oHFgN1t226bNZtXJLegk
 
 ---
 ---
